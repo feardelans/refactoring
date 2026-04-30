@@ -1,5 +1,10 @@
 import unittest
-from models import Dish, Menu, Client, RegularOrder, KitchenNotifier
+
+from src.models import Dish, Menu, Client
+from src.orders import Order, RegularOrder, BulkOrder
+from src.factory import OrderFactory
+from src.observers import OrderObserver, KitchenNotifier
+from src.database import OrderDatabase
 
 class TestBasicInteractions(unittest.TestCase):
 

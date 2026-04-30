@@ -1,21 +1,19 @@
 """
-Tests for Design Patterns: Singleton, Factory, and Observer (Part 3).
+Tests for Design Patterns: Singleton, Factory, and Observer
 """
-
 import unittest
-from models import (
-    Client, RegularOrder, BulkOrder,
-    OrderFactory, OrderDatabase, KitchenNotifier
-)
+
+from src.models import Dish, Menu, Client
+from src.orders import Order, RegularOrder, BulkOrder
+from src.factory import OrderFactory
+from src.observers import OrderObserver, KitchenNotifier
+from src.database import OrderDatabase
 
 class TestDesignPatterns(unittest.TestCase):
-    """Частина 3: Перевірка шаблонів проектування"""
 
     def setUp(self):
-        # Очищуємо Singleton перед кожним тестом, щоб вони були незалежними
         OrderDatabase().clear()
 
-    # --- Тести для Singleton ---
     def test_singleton_same_instance(self):
         db1 = OrderDatabase()
         db2 = OrderDatabase()
@@ -33,7 +31,6 @@ class TestDesignPatterns(unittest.TestCase):
         db.clear()
         self.assertEqual(len(db.orders), 0)
 
-    # --- Тести для Factory ---
     def test_factory_creates_regular_order(self):
         order = OrderFactory.create_order("Regular", Client("Charlie"))
         self.assertIsInstance(order, RegularOrder)
@@ -45,11 +42,9 @@ class TestDesignPatterns(unittest.TestCase):
         self.assertEqual(order.get_type(), "Bulk")
 
     def test_factory_default_to_regular(self):
-        # Перевірка "захисту від дурня": невідомий тип створює звичайне замовлення
         order = OrderFactory.create_order("Unknown", Client("Eve"))
         self.assertIsInstance(order, RegularOrder)
 
-    # --- Тести для Observer ---
     def test_observer_notified_on_save(self):
         db = OrderDatabase()
         kitchen = KitchenNotifier()
@@ -70,7 +65,6 @@ class TestDesignPatterns(unittest.TestCase):
         db = OrderDatabase()
         kitchen = KitchenNotifier()
         db.add_observer(kitchen)
-        # Нічого не зберігаємо
         self.assertFalse(kitchen.notified)
 
     def test_observer_reset_state(self):
