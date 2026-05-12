@@ -1,4 +1,4 @@
-# Game Store API
+# Game Store 
 
 ![CI Pipeline](https://github.com/feardelans/refactoring/actions/workflows/ci.yml/badge.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-green.svg)
@@ -26,7 +26,6 @@ lab5/
 ├── Dockerfile.test            # Образ для тестів
 ├── docker-compose.yaml        # App + PostgreSQL
 ├── requirements.txt           # Залежності Python
-├── .github/workflows/ci.yml   # CI/CD конвеєр
 ├── src/
 │   ├── controllers/
 │   │   ├── store_controller.py
@@ -217,7 +216,7 @@ tests/test_user_service.py::test_registration_email_uniqueness[a@b.c-d@e.f-False
 
 ## CI/CD конвеєр
 
-Проєкт використовує **GitHub Actions** (`.github/workflows/ci.yml`) з трьома етапами:
+Проєкт використовує **GitHub Actions** (`/.github/workflows/ci.yml` в корені репозиторію) з трьома етапами:
 
 1. **Lint** — статичний аналіз коду через `flake8` та `pylint`
 2. **Test** — запуск 39 юніт-тестів через `pytest`
