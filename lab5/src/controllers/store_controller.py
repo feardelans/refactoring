@@ -3,6 +3,7 @@ from src.services.store_service import StoreService
 
 # pylint: disable=too-few-public-methods
 
+
 class StoreController:
     """Serves as the API entry point for store-related actions."""
 

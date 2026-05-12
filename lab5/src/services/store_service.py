@@ -5,6 +5,7 @@ from src.repositories.user_repository import UserRepository
 
 # pylint: disable=too-few-public-methods
 
+
 class StoreService:
     """Contains business logic for store operations."""
 

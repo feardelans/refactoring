@@ -3,6 +3,7 @@ from src.services.user_service import UserService
 
 # pylint: disable=too-few-public-methods
 
+
 class UserController:
     """Serves as the API entry point for user-related actions."""
 

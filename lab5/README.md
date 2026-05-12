@@ -1,106 +1,226 @@
-# Lab 5: Business Logic & Refactoring
+# Game Store API
 
-Реалізація бекенд-частини бізнес-логіки для магазину відеоігор з використанням архітектури Controller-Service-Repository та покриттям юніт-тестами.
+![CI Pipeline](https://github.com/feardelans/refactoring/actions/workflows/ci.yml/badge.svg)
+![Docker](https://img.shields.io/badge/docker-ready-green.svg)
 
-##  Архітектура
-Проєкт суворо дотримується архітектурного шаблону **Controller-Service-Repository** для забезпечення принципу єдиної відповідальності (SRP) та розділення обов'язків (Separation of Concerns):
-- **`models/`**: Класи даних (`@dataclass`), що представляють сутності предметної області (`User`, `Game`, `Review`).
-- **`repositories/`**: Шар доступу до даних, відповідальний за збереження, пошук та отримання сутностей (у цій лабораторній роботі імітується зберігання в оперативній пам'яті - in-memory).
-- **`services/`**: Ядро бізнес-логіки, валідація даних та забезпечення виконання правил (наприклад, вікові обмеження, автоматичне видалення зі списку бажаного).
-- **`controllers/`**: Точки входу API, які обробляють вхідні запити та направляють їх до відповідних сервісів.
+REST API бекенд для магазину відеоігор (аналог Steam), побудований на Flask з архітектурою Controller-Service-Repository та покриттям юніт-тестами.
 
-##  Структура каталогів
+## Архітектура
+
+Проєкт дотримується шаблону **Controller → Service → Repository**:
+
+| Шар | Призначення |
+|-----|-------------|
+| **`models/`** | Dataclass-сутності (`User`, `Game`, `Review`) |
+| **`repositories/`** | Доступ до даних (in-memory сховище) |
+| **`services/`** | Бізнес-логіка, валідація |
+| **`controllers/`** | Точки входу (legacy CLI-контролери) |
+| **`app.py`** | Flask REST API, що обгортає сервіси |
+
+## Структура каталогів
+
 ```text
 lab5/
+├── app.py                     # Flask REST API
+├── Dockerfile                 # Образ додатку
+├── Dockerfile.test            # Образ для тестів
+├── docker-compose.yaml        # App + PostgreSQL
+├── requirements.txt           # Залежності Python
+├── .github/workflows/ci.yml   # CI/CD конвеєр
 ├── src/
 │   ├── controllers/
+│   │   ├── store_controller.py
+│   │   └── user_controller.py
 │   ├── models/
+│   │   ├── user.py
+│   │   ├── game.py
+│   │   └── review.py
 │   ├── repositories/
+│   │   ├── user_repository.py
+│   │   └── game_repository.py
 │   └── services/
+│       ├── store_service.py
+│       └── user_service.py
 └── tests/
     ├── test_store_service.py
     └── test_user_service.py
 ```
-##  Основний реалізований функціонал
-- Реєстрація користувачів: Валідація віку (13+) та перевірка унікальності email.
 
-- Пошукова система: Пошук ігор за назвою (нечутливий до регістру) з можливістю часткового збігу.
+## Запуск через Docker
 
-- Керування бібліотекою: Симуляція покупки та запобігання дублюванню ігор в акаунті.
+### Передумови
+- Docker та Docker Compose встановлені на вашій машині.
 
-- Список бажаного (Wishlist): Автоматичне видалення ігор зі списку бажаного після їх фактичного придбання.
+### Запуск всіх сервісів (додаток + база даних)
 
-- Система відгуків: Валідація оцінок (від 1 до 10) та строгий контроль доступу (відгуки можуть залишати лише власники ігор).
-
-##  Встановлення та налаштування
-Щоб встановити необхідні залежності для розробки та тестування, виконайте наступну команду в терміналі:
-```text
-pip install pytest pylint
+```bash
+docker-compose up --build
 ```
-##  Запуск тестів
-Проєкт включає набір із 39 юніт-тестів, що використовують параметризацію pytest для покриття крайових випадків, граничних значень та очікуваних виключень.
 
-Щоб запустити тести та побачити детальний вивід, виконайте:
-```text
+Додаток буде доступний за адресою: **http://localhost:5000**
+
+### Зупинка сервісів
+
+```bash
+docker-compose down
+```
+
+### Зупинка з видаленням даних БД
+
+```bash
+docker-compose down -v
+```
+
+### Запуск тестів у Docker
+
+```bash
+docker-compose run --rm tests
+```
+
+## Локальний запуск (без Docker)
+
+### 1. Встановлення залежностей
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Запуск додатку
+
+```bash
+python app.py
+```
+
+Сервер запуститься на `http://localhost:5000`.
+
+### 3. Запуск тестів
+
+```bash
 python -m pytest tests/ -v
 ```
-##  Результат тестів
-```text
-collected 39 items                                                                                                                                                                                                       
 
-tests/test_store_service.py::test_search_games[Witcher-1] PASSED                                                                                                                                                   [  2%]
-tests/test_store_service.py::test_search_games[witcher-1] PASSED                                                                                                                                                   [  5%]
-tests/test_store_service.py::test_search_games[WITCHER-1] PASSED                                                                                                                                                   [  7%]
-tests/test_store_service.py::test_search_games[craft-1] PASSED                                                                                                                                                     [ 10%]
-tests/test_store_service.py::test_search_games[The-2] PASSED                                                                                                                                                       [ 12%]
-tests/test_store_service.py::test_search_games[e-4] PASSED                                                                                                                                                         [ 15%]
-tests/test_store_service.py::test_search_games[GTA 6-0] PASSED                                                                                                                                                     [ 17%]
-tests/test_store_service.py::test_search_games[-5] PASSED                                                                                                                                                          [ 20%]
-tests/test_store_service.py::test_search_games[   -5] PASSED                                                                                                                                                       [ 23%]
-tests/test_store_service.py::test_add_game_success PASSED                                                                                                                                                          [ 25%]
-tests/test_store_service.py::test_add_game_exceptions[99-1] PASSED                                                                                                                                                 [ 28%]
-tests/test_store_service.py::test_add_game_exceptions[1-99] PASSED                                                                                                                                                 [ 30%]
-tests/test_store_service.py::test_add_game_exceptions[99-99] PASSED                                                                                                                                                [ 33%]
-tests/test_store_service.py::test_add_game_duplicate PASSED                                                                                                                                                        [ 35%]
-tests/test_store_service.py::test_wishlist_flow PASSED                                                                                                                                                             [ 38%]
-tests/test_store_service.py::test_wishlist_logic[add_to_library] PASSED                                                                                                                                            [ 41%]
-tests/test_store_service.py::test_wishlist_logic[add_to_wishlist] PASSED                                                                                                                                           [ 43%]
-tests/test_store_service.py::test_refund_success PASSED                                                                                                                                                            [ 46%]
-tests/test_store_service.py::test_refund_exceptions[1-2] PASSED                                                                                                                                                    [ 48%]
-tests/test_store_service.py::test_refund_exceptions[99-1] PASSED                                                                                                                                                   [ 51%]
-tests/test_store_service.py::test_reviews[1-True] PASSED                                                                                                                                                           [ 53%]
-tests/test_store_service.py::test_reviews[5-True] PASSED                                                                                                                                                           [ 56%]
-tests/test_store_service.py::test_reviews[10-True] PASSED                                                                                                                                                          [ 58%]
-tests/test_store_service.py::test_reviews[0-False] PASSED                                                                                                                                                          [ 61%]
-tests/test_store_service.py::test_reviews[-1-False] PASSED                                                                                                                                                         [ 64%]
-tests/test_store_service.py::test_reviews[11-False] PASSED                                                                                                                                                         [ 66%]
-tests/test_store_service.py::test_reviews[99-False] PASSED                                                                                                                                                         [ 69%]
-tests/test_store_service.py::test_review_access[2-1] PASSED                                                                                                                                                        [ 71%]
-tests/test_store_service.py::test_review_access[1-2] PASSED                                                                                                                                                        [ 74%]
-tests/test_user_service.py::test_registration_age_boundaries[13-True] PASSED                                                                                                                                       [ 76%]
-tests/test_user_service.py::test_registration_age_boundaries[14-True] PASSED                                                                                                                                       [ 79%]
-tests/test_user_service.py::test_registration_age_boundaries[99-True] PASSED                                                                                                                                       [ 82%]
-tests/test_user_service.py::test_registration_age_boundaries[12-False] PASSED                                                                                                                                      [ 84%]
-tests/test_user_service.py::test_registration_age_boundaries[0-False] PASSED                                                                                                                                       [ 87%]
-tests/test_user_service.py::test_registration_age_boundaries[-5-False] PASSED                                                                                                                                      [ 89%]
-tests/test_user_service.py::test_registration_email_uniqueness[test@mail.com-test@mail.com-True] PASSED                                                                                                            [ 92%]
-tests/test_user_service.py::test_registration_email_uniqueness[user1@mail.com-user2@mail.com-False] PASSED                                                                                                         [ 94%]
-tests/test_user_service.py::test_registration_email_uniqueness[ADMIN@mail.com-ADMIN@mail.com-True] PASSED                                                                                                          [ 97%]
-tests/test_user_service.py::test_registration_email_uniqueness[a@b.c-d@e.f-False] PASSED                                                                                                                           [100%]
+### 4. Запуск лінтерів
 
-=================================================================================================== 39 passed in 0.03s ==================================================================================================
-```
-
-## Якість коду та лінтинг
-Кодова база повністю відповідає стандартам PEP 8. 
-Щоб запустити лінтер і перевірити оцінку якості коду, виконайте:
-```text
+```bash
+python -m flake8 src/ app.py --max-line-length=120
 python -m pylint src/
 ```
-## Результат pylint
-```text
--------------------------------------------------------------------
-Your code has been rated at 10.00/10 (previous run: 8.90/10, +1.10)
+
+## Змінні середовища
+
+| Змінна | Опис | Значення за замовчуванням |
+|--------|------|--------------------------|
+| `PORT` | Порт на якому працює додаток | `5000` |
+| `FLASK_DEBUG` | Режим дебагу (`0` або `1`) | `0` |
+| `DATABASE_URL` | URL підключення до PostgreSQL | не встановлено |
+| `POSTGRES_USER` | Ім'я користувача БД (docker-compose) | `store_user` |
+| `POSTGRES_PASSWORD` | Пароль користувача БД (docker-compose) | `store_pass` |
+| `POSTGRES_DB` | Назва бази даних (docker-compose) | `game_store` |
+
+## API ендпоінти
+
+### Користувачі
+
+| Метод | URL | Опис |
+|-------|-----|------|
+| `POST` | `/users` | Реєстрація нового користувача |
+| `GET` | `/users/<id>` | Отримати дані користувача |
+
+**POST /users — приклад запиту:**
+```json
+{"user_id": 1, "email": "player@mail.com", "age": 25}
 ```
 
+**Відповідь (201):**
+```json
+{"user_id": 1, "email": "player@mail.com", "age": 25, "library": [], "wishlist": []}
+```
 
+### Каталог ігор
+
+| Метод | URL | Опис |
+|-------|-----|------|
+| `GET` | `/games` | Список всіх ігор |
+| `GET` | `/games?q=witcher` | Пошук ігор за назвою |
+| `GET` | `/games/<id>` | Отримати гру за ID |
+
+**GET /games — приклад відповіді:**
+```json
+[
+  {"game_id": 1, "title": "The Witcher 3"},
+  {"game_id": 2, "title": "Cyberpunk 2077"},
+  {"game_id": 3, "title": "Minecraft"},
+  {"game_id": 4, "title": "The Elder Scrolls V: Skyrim"},
+  {"game_id": 5, "title": "Portal 2"}
+]
+```
+
+### Бібліотека користувача
+
+| Метод | URL | Опис |
+|-------|-----|------|
+| `POST` | `/users/<id>/library` | Додати гру до бібліотеки |
+| `DELETE` | `/users/<id>/library/<game_id>` | Повернути гру (refund) |
+
+**POST /users/1/library — приклад запиту:**
+```json
+{"game_id": 1}
+```
+
+### Список бажаного
+
+| Метод | URL | Опис |
+|-------|-----|------|
+| `POST` | `/users/<id>/wishlist` | Додати гру до вішліста |
+
+**POST /users/1/wishlist — приклад запиту:**
+```json
+{"game_id": 2}
+```
+
+### Відгуки
+
+| Метод | URL | Опис |
+|-------|-----|------|
+| `POST` | `/users/<id>/reviews` | Залишити відгук на гру |
+| `GET` | `/reviews` | Список усіх відгуків |
+| `GET` | `/reviews?game_id=1` | Відгуки для конкретної гри |
+
+**POST /users/1/reviews — приклад запиту:**
+```json
+{"game_id": 1, "rating": 9, "text": "Masterpiece!"}
+```
+
+## Тести
+
+Проєкт містить **39 юніт-тестів** з використанням `pytest` та параметризації:
+
+| Тест-файл | Що перевіряє |
+|------------|--------------|
+| `test_user_service.py` | Реєстрація: валідація віку (13+), унікальність email |
+| `test_store_service.py` | Пошук ігор, покупка, дублікати, вішліст, refund, відгуки (рейтинг 1-10), контроль доступу |
+
+### Запуск тестів та очікуваний результат
+
+```bash
+python -m pytest tests/ -v
+```
+
+```text
+tests/test_store_service.py::test_search_games[Witcher-1] PASSED
+tests/test_store_service.py::test_search_games[witcher-1] PASSED
+...
+tests/test_user_service.py::test_registration_email_uniqueness[a@b.c-d@e.f-False] PASSED
+
+================================= 39 passed in 0.03s =================================
+```
+
+## CI/CD конвеєр
+
+Проєкт використовує **GitHub Actions** (`.github/workflows/ci.yml`) з трьома етапами:
+
+1. **Lint** — статичний аналіз коду через `flake8` та `pylint`
+2. **Test** — запуск 39 юніт-тестів через `pytest`
+3. **Docker** — збірка Docker-образу додатку та запуск тестів у контейнері
+
+Конвеєр запускається автоматично при push та pull request до гілок `main`/`master`.
